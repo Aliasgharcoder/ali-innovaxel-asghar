@@ -1,3 +1,29 @@
-from django.shortcuts import render
+import random, string
+from django.shortcuts import get_object_or_404, redirect
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from .models import ShortURL
+from .serializers import ShortURLSerializer
 
-# Create your views here.
+def generate_unique_shortcode(length=6):
+    while True:
+        code = ''.join(random.choices(string.ascii_letters + string.digits, k=length))
+        if not ShortURL.objects.filter(short_code=code).exists():
+            return code
+
+class ShortenURLView(APIView):
+    def post(self, request):
+        serializer = ShortURLSerializer(data=request.data)
+        if serializer.is_valid():
+            original_url = serializer.validated_data['original_url']
+            short_code = generate_unique_shortcode()
+            short_url_obj = ShortURL.objects.create(original_url=original_url, short_code=short_code)
+            response_serializer = ShortURLSerializer(short_url_obj)
+            return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class RedirectURLView(APIView):
+    def get(self, request, short_code):
+        url_obj = get_object_or_404(ShortURL, short_code=short_code)
+        return redirect(url_obj.original_url)
