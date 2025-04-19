@@ -26,4 +26,16 @@ class ShortenURLView(APIView):
 class RedirectURLView(APIView):
     def get(self, request, short_code):
         url_obj = get_object_or_404(ShortURL, short_code=short_code)
+        url_obj.access_count += 1
+        url_obj.save()
         return redirect(url_obj.original_url)
+class URLStatsView(APIView):
+    def get(self, request, short_code):
+        url_obj = get_object_or_404(ShortURL, short_code=short_code)
+        data = {
+            "original_url": url_obj.original_url,
+            "short_code": url_obj.short_code,
+            "created_at": url_obj.created_at,
+            "access_count": url_obj.access_count,
+        }
+        return Response(data, status=status.HTTP_200_OK)

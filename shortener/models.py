@@ -10,6 +10,8 @@ class ShortURL(models.Model):
     original_url = models.URLField()
     short_code = models.CharField(max_length=15, unique=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    access_count = models.PositiveIntegerField(default=0)
+
 
     def save(self, *args, **kwargs):
         if not self.short_code:
