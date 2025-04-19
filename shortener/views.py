@@ -39,3 +39,17 @@ class URLStatsView(APIView):
             "access_count": url_obj.access_count,
         }
         return Response(data, status=status.HTTP_200_OK)
+class DeleteURLView(APIView):
+    def delete(self, request, short_code):
+        url_obj = get_object_or_404(ShortURL, short_code=short_code)
+        url_obj.delete()
+        return Response({"message": "Short URL deleted"}, status=status.HTTP_204_NO_CONTENT)
+class UpdateURLView(APIView):
+    def put(self, request, short_code):
+        url_obj = get_object_or_404(ShortURL, short_code=short_code)
+        new_url = request.data.get("original_url")
+        if new_url:
+            url_obj.original_url = new_url
+            url_obj.save()
+            return Response(ShortURLSerializer(url_obj).data)
+        return Response({"error": "New URL required"}, status=status.HTTP_400_BAD_REQUEST)
